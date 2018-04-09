@@ -71,5 +71,37 @@ if [ ! -z "$AUTO_CREATE_TOPICS" ]; then
     echo "auto.create.topics.enable=$AUTO_CREATE_TOPICS" >> $KAFKA_HOME/config/server.properties
 fi
 
+# set max size of message in byte
+if [ ! -z "$MAX_MESSAGE_SIZE" ]; then
+    echo "max message size: $MAX_MESSAGE_SIZE"
+    if grep -q "^socket.send.buffer.bytes" $KAFKA_HOME/config/server.properties; then
+        sed -r -i "s/#(socket.send.buffer.bytes)=(.*)/\1=$MAX_MESSAGE_SIZE/g" $KAFKA_HOME/config/server.properties
+    else
+        echo "socket.send.buffer.bytes=$MAX_MESSAGE_SIZE" >> $KAFKA_HOME/config/server.properties
+    fi
+    if grep -q "^socket.receive.buffer.bytes" $KAFKA_HOME/config/server.properties; then
+        sed -r -i "s/#(socket.receive.buffer.bytes)=(.*)/\1=$MAX_MESSAGE_SIZE/g" $KAFKA_HOME/config/server.properties
+    else
+        echo "socket.receive.buffer.bytes=$MAX_MESSAGE_SIZE" >> $KAFKA_HOME/config/server.properties
+    fi
+    if grep -q "^replica.fetch.max.bytes" $KAFKA_HOME/config/server.properties; then
+        sed -r -i "s/#(replica.fetch.max.bytes)=(.*)/\1=$MAX_MESSAGE_SIZE/g" $KAFKA_HOME/config/server.properties
+    else
+        echo "replica.fetch.max.bytes=$MAX_MESSAGE_SIZE" >> $KAFKA_HOME/config/server.properties
+    fi
+    if grep -q "^message.max.bytes" $KAFKA_HOME/config/server.properties; then
+        sed -r -i "s/#(message.max.bytes)=(.*)/\1=$MAX_MESSAGE_SIZE/g" $KAFKA_HOME/config/server.properties
+    else
+        echo "message.max.bytes=$MAX_MESSAGE_SIZE" >> $KAFKA_HOME/config/server.properties
+    fi
+
+    if grep -q "^fetch.message.max.bytes" $KAFKA_HOME/config/consumer.properties; then
+        sed -r -i "s/#(fetch.message.max.bytes)=(.*)/\1=$MAX_MESSAGE_SIZE/g" $KAFKA_HOME/config/consumer.properties
+    else
+        echo "fetch.message.max.bytes=$MAX_MESSAGE_SIZE" >> $KAFKA_HOME/config/consumer.properties
+    fi
+fi
+
+
 # Run Kafka
 $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/server.properties
